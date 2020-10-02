@@ -1,7 +1,8 @@
+clear all;
 setup_encoder;
-
+conv_encoder_trailing=false;
 %% Simulation parameters.
-sim_N = 2;
+sim_N = 10;
 N = 4000;
 
 %% Start simulation.
@@ -16,8 +17,11 @@ for sim_iter = 1:sim_N
     disp(['BER in channel: ', num2str(bfr*100), '%'])
 
     %% Decode.
-    decoded_bits = conv_decode(encoded_bits, conv_encoder_conf);
-
+    decoded_bits = fast_conv_decode(encoded_bits, conv_encoder_conf, false);
+    slow_decoded_bits = conv_decode(encoded_bits, conv_encoder_conf, false);
+    if sum(xor(decoded_bits, slow_decoded_bits))~=0
+        error('C++ error!');
+    end
     %% Find all the errors.
     err_bit_cnt = sum(xor(random_bits, decoded_bits));
     disp(['BER after decoding: ', num2str(sum(err_bit_cnt)/N*100),'%']);

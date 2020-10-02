@@ -89,11 +89,11 @@ function decoded_bits = conv_decode(encoded_bits, conv_encoder_conf, soft_decode
     for iter=N_input_blocks:-1:1
         o_index = k*(iter-1)+1;
         status = best_path_choices{iter}(p, :);
-        decoded_bits(o_index:o_index+k-1) = to_binary(status(1),k);
+        decoded_bits(o_index:o_index+k-1) = flip(to_binary(status(1),k));
         p = status(2);
     end
     
     if conv_encoder_conf.trailing
-        decoded_bits = decoded_bits(1:N_input_blocks-N_inner_state_bits);
+        decoded_bits = decoded_bits(1:N_input_blocks*k-N_inner_state_bits);
     end
 end

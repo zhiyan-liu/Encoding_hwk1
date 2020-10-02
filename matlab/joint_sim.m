@@ -23,8 +23,12 @@ else
     mapping_conf.out = 'hard';
 end
 
+assert(~soft_decode || (conv_encoder_conf.n == mapping_conf.bps), ...
+    'conv_encoder_conf.n must be coherent with mapping_conf.bps!');
 tic;
-for sigma_iter = 1:N_sigmas
+
+parfor sigma_iter = 1:N_sigmas
+
     sigma = sigma_arr(sigma_iter);
     
     for sim_iter = 1:N_sim
@@ -46,8 +50,9 @@ for sigma_iter = 1:N_sigmas
         end
         
         %% Decode.
-        decoded_bits = conv_decode(pred_bits, conv_encoder_conf, soft_decode);
-
+        decoded_bits = fast_conv_decode(pred_bits, conv_encoder_conf, soft_decode);
+        % slow_decoded_bits = conv_decode(pred_bits, conv_encoder_conf, soft_decode);
+        % assert(sum(xor(decoded_bits, slow_decoded_bits))==0);
         %% Find all the errors.
         err_bit_cnt_after_coding(sigma_iter) = err_bit_cnt_after_coding(sigma_iter) + ...
             sum(xor(random_bits, decoded_bits));
