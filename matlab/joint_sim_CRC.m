@@ -2,9 +2,9 @@ setup_mapper;
 setup_encoder;
 
 %% Simulation parameters.
-N_sim = 500;
+N_sim = 2500;
 N_info_bits = 4096;
-SNR_arr = [0, 0.5, 1, 1.5, 2, 2.5, 3, 4, 5, 7.5, 10, 12.5, 15]; % target SNR.
+SNR_arr = [0, 0.5, 1, 1.5, 2, 2.5, 3, 4, 5, 6, 7, 8, 9, 10, 12.5, 15, 17.5];   % target SNR.
 Ps = 1;
 
 
@@ -26,7 +26,7 @@ else
 end
 
 tic;
-for sigma_iter = 1:N_sigmas
+parfor sigma_iter = 1:N_sigmas
     sigma = sigma_arr(sigma_iter);
     
     for sim_iter = 1:N_sim
@@ -78,17 +78,19 @@ for sigma_iter = 1:N_sigmas
     end
     disp(['Log BER after encoding: ', ...
         num2str(log10(err_bit_cnt_after_coding(sigma_iter)/(N_info_bits*N_sim)))]);
+    disp(['Log BLER after encoding: ', ...
+        num2str(log10(err_box_cnt_crc(sigma_iter)))]);
 end
 time_elapsed = toc;
 assert(~any(diff(L_encoded)), 'error in length of encoded bits!');
 
 %% Count BLER.
 figure(1);
+set(gca, 'yscale', 'log');
 plot(SNR_arr,err_box_cnt_crc);
 ylabel('err Box\_rate');
 xlabel('SNR_(_d_B_)');
-
-
+grid on;
 
 %% Display!!
 figure(2);
@@ -105,5 +107,5 @@ grid on;
 disp(['Time elapsed: ', num2str(time_elapsed), 's for ', num2str(N_sigmas*N_sim), ' channel simulations']);
 disp(['b=', num2str(ch_conf.b), ', rho=',num2str(ch_conf.rho)]);
 
-%% Save files.
-save('data/sim.mat');
+%% Save variables into files.
+save(['data/sim_', strrep(datestr(datetime), ':', '_'), '.mat']);
