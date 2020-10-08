@@ -67,10 +67,3 @@ function bit_stream=bit_demapping(syms, L, mapping_conf, ch, ch_conf, sigma)
         end
     end
 end
-
-
-
-% Quadratic Interp
-function est_ch = quad_interp(est_ch, pilot_flag, pilot_rate)
-    
-end
