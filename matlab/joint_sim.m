@@ -42,7 +42,7 @@ parfor sigma_iter = 1:N_sigmas
         syms = bit_mapping(encoded_bits, mapping_conf);
         ch = ch_realization(length(syms), ch_conf);
         syms_with_noise = syms .* ch + (get_cgaussian(sigma, length(syms))).';
-        pred_bits = bit_demapping(syms_with_noise, length(encoded_bits), mapping_conf, ch);
+        pred_bits = bit_demapping(syms_with_noise, length(encoded_bits), mapping_conf, ch, ch_conf, sigma);
         
         if ~soft_decode
             err_bit_cnt_before_coding(sigma_iter) = err_bit_cnt_before_coding(sigma_iter) + ...
@@ -76,11 +76,11 @@ assert(~any(diff(L_encoded)), 'error in length of encoded bits!');
 
 %% Display!!
 figure(1);
-hold on;
+hold on; 
 set(gca, 'yscale', 'log');
 plot(SNR_arr, ((err_bit_cnt_after_coding)/(N_info_bits*N_sim)).');
-plot(SNR_arr, (err_bit_cnt_before_coding/(L_encoded(1)*N_sim)).');
-legend('BER_ conv', 'BER_ ch');
+% plot(SNR_arr, (err_bit_cnt_before_coding/(L_encoded(1)*N_sim)).');
+% legend('BER_kalman');
 title('BER-SNR Curve');
 xlabel('SNR(dB)');
 ylabel('BER');

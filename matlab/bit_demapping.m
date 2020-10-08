@@ -1,4 +1,4 @@
-function bit_stream=bit_demapping(syms, L, mapping_conf, ch)
+function bit_stream=bit_demapping(syms, L, mapping_conf, ch, ch_conf, sigma)
 % demapping algorithm.
 % Need To: Channel estimation; calculate LLR / L2 distance.
     mapping_vector = mapping_conf.M;    % Constellation points.
@@ -21,15 +21,17 @@ function bit_stream=bit_demapping(syms, L, mapping_conf, ch)
     if strcmp(mode, 'ch_unknown')
         pilot_rate = mapping_conf.pilotrate;
         est_ch = zeros([1,length(syms)]);
-        pilot_flag = zeros([1,length(syms)]);
+        pilot_flag = false([1,length(syms)]);
         for k=1:length(syms)
             if mod(k,pilot_rate) == 1 || k == length(syms)
-                pilot_flag(k) = 1;
+                pilot_flag(k) = true;
                 est_ch(k) = syms(k);
             end
         end
         % using linear interp to estimate channels.
-        est_ch = linear_interp(est_ch, pilot_flag);
+        % est_ch = linear_interp(est_ch, pilot_flag);
+        % est_ch = quad_interp(est_ch, pilot_flag, pilot_rate);
+        est_ch = est_kalman(est_ch, pilot_flag, pilot_rate, ch_conf.rho, ch_conf.b, sigma);
         if strcmp(alg, 'zf')
             est_syms = syms ./ est_ch;
         elseif strcmp(alg, 'mse')
@@ -66,23 +68,7 @@ function bit_stream=bit_demapping(syms, L, mapping_conf, ch)
     end
 end
 
-% Linear Interp
-function est_ch = linear_interp(est_ch, pilot_flag)
-    last_est = est_ch(1);
-    last_est_idx = 1;
-    for k=2:length(est_ch)
-        if pilot_flag(k) == 1
-            current_est = est_ch(k);
-            linear_k = (current_est-last_est)/(k-last_est_idx);
-            int_points = last_est + linear_k .* (1:k-last_est_idx-1);
-            est_ch(last_est_idx+1: k-1) = int_points;
-            est_ch(k) = est_ch(k);
-            pilot_flag(k) = 1;
-            last_est = current_est;
-            last_est_idx = k;
-        end
-    end
-end
+
 
 % Quadratic Interp
 function est_ch = quad_interp(est_ch, pilot_flag, pilot_rate)
