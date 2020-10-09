@@ -28,10 +28,11 @@ end
 % Record all the channel CSI and Constellation points.
 record_csi = true;
 CSI = cell(N_sigmas, 1);    % each row of each cell element: The ch.
-SYMS = cell(N_sigmas, 2);
+SYMS_TRANSMIT = cell(N_sigmas, 1);
+SYMS_RECEIVE = cell(N_sigmas, 1);
 
 tic;
-for sigma_iter = 1:N_sigmas
+parfor sigma_iter = 1:N_sigmas
     sigma = sigma_arr(sigma_iter);
     
     for sim_iter = 1:N_sim
@@ -49,15 +50,15 @@ for sigma_iter = 1:N_sigmas
         if record_csi
             if isempty(CSI{sigma_iter})
                 Ls = length(syms);
-                CSI{sigma_iter} = zeros(N_sim, Ls);
-                SYMS{sigma_iter, 1} = zeros(N_sim, Ls);
-                SYMS{sigma_iter, 2} = zeros(N_sim, Ls);
+                csi_temp = zeros(N_sim, Ls);
+                syms_temp_transmit = zeros(N_sim, Ls);
+                syms_temp_receive = zeros(N_sim, Ls);
             end
-            CSI{sigma_iter}(sim_iter, :) = ch;
-            SYMS{sigma_iter, 1}(sim_iter, :) = syms;
-            SYMS{sigma_iter, 2}(sim_iter, :) = syms_with_noise;
+            csi_temp(sim_iter, :) = ch;
+            syms_temp_transmit(sim_iter, :) = syms;
+            syms_temp_receive(sim_iter, :) = syms_with_noise;
         end
-        pred_bits = bit_demapping(syms_with_noise, length(encoded_bits), mapping_conf, ch);
+        pred_bits = bit_demapping(syms_with_noise, length(encoded_bits), mapping_conf, ch, ch_conf, sigma);
         
         if ~soft_decode
             err_bit_cnt_before_coding(sigma_iter) = err_bit_cnt_before_coding(sigma_iter) + ...
@@ -96,6 +97,11 @@ for sigma_iter = 1:N_sigmas
         num2str(log10(err_bit_cnt_after_coding(sigma_iter)/(N_info_bits*N_sim)))]);
     disp(['Log BLER after encoding: ', ...
         num2str(log10(err_box_cnt_crc(sigma_iter)))]);
+    
+    %% Update CSI && SYMS.
+    CSI{sigma_iter} = csi_temp;
+    SYMS_TRANSMIT{sigma_iter} = syms_temp_transmit;
+    SYMS_RECEIVE{sigma_iter} = syms_temp_receive;
 end
 time_elapsed = toc;
 assert(~any(diff(L_encoded)), 'error in length of encoded bits!');
