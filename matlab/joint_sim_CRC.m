@@ -25,6 +25,11 @@ else
     mapping_conf.out = 'hard';
 end
 
+% Record all the channel CSI and Constellation points.
+record_csi = true;
+CSI = cell(N_sigmas, 1);    % each row of each cell element: The ch.
+SYMS = cell(N_sigmas, 2);
+
 tic;
 for sigma_iter = 1:N_sigmas
     sigma = sigma_arr(sigma_iter);
@@ -41,6 +46,17 @@ for sigma_iter = 1:N_sigmas
         syms = bit_mapping(encoded_bits, mapping_conf);
         ch = ch_realization(length(syms), ch_conf);
         syms_with_noise = syms .* ch + (get_cgaussian(sigma, length(syms))).';
+        if record_csi
+            if isempty(CSI{sigma_iter})
+                Ls = length(syms);
+                CSI{sigma_iter} = zeros(N_sim, Ls);
+                SYMS{sigma_iter, 1} = zeros(N_sim, Ls);
+                SYMS{sigma_iter, 2} = zeros(N_sim, Ls);
+            end
+            CSI{sigma_iter}(sim_iter, :) = ch;
+            SYMS{sigma_iter, 1}(sim_iter, :) = syms;
+            SYMS{sigma_iter, 2}(sim_iter, :) = syms_with_noise;
+        end
         pred_bits = bit_demapping(syms_with_noise, length(encoded_bits), mapping_conf, ch);
         
         if ~soft_decode
@@ -61,7 +77,7 @@ for sigma_iter = 1:N_sigmas
             end
         end
         
-       %%
+       % Display running info.
         if mod(sim_iter, floor(N_sim/10))==0
             disp(['SNR=', num2str(SNR_arr(sigma_iter)),': ',num2str(sim_iter/N_sim*100),'% complete']);
         end
@@ -82,13 +98,14 @@ end
 time_elapsed = toc;
 assert(~any(diff(L_encoded)), 'error in length of encoded bits!');
 
+
 %% Count BLER.
 figure(1);
+set(gca, 'yscale', 'log');
 plot(SNR_arr,err_box_cnt_crc);
-ylabel('err Box\_rate');
+ylabel('BLER');
 xlabel('SNR_(_d_B_)');
-
-
+grid on;
 
 %% Display!!
 figure(2);
@@ -105,5 +122,5 @@ grid on;
 disp(['Time elapsed: ', num2str(time_elapsed), 's for ', num2str(N_sigmas*N_sim), ' channel simulations']);
 disp(['b=', num2str(ch_conf.b), ', rho=',num2str(ch_conf.rho)]);
 
-%% Save files.
+%% Save simulation files.
 save('data/sim.mat');
