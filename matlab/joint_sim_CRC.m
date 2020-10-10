@@ -26,13 +26,13 @@ else
 end
 
 % Record all the channel CSI and Constellation points.
-record_csi = true;
+record_csi = false;
 CSI = cell(N_sigmas, 1);    % each row of each cell element: The ch.
 SYMS_TRANSMIT = cell(N_sigmas, 1);
 SYMS_RECEIVE = cell(N_sigmas, 1);
 
 tic;
-parfor sigma_iter = 1:N_sigmas
+for sigma_iter = 1:N_sigmas
     sigma = sigma_arr(sigma_iter);
     
     for sim_iter = 1:N_sim
