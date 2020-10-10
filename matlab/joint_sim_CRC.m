@@ -32,7 +32,7 @@ SYMS_TRANSMIT = cell(N_sigmas, 1);
 SYMS_RECEIVE = cell(N_sigmas, 1);
 
 tic;
-for sigma_iter = 1:N_sigmas
+parfor sigma_iter = 1:N_sigmas
     sigma = sigma_arr(sigma_iter);
     
     for sim_iter = 1:N_sim
