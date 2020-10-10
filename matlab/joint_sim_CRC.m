@@ -2,7 +2,7 @@ setup_mapper;
 setup_encoder;
 
 %% Simulation parameters.
-N_sim = 2500;
+N_sim = 1000;
 N_info_bits = 4096;
 SNR_arr = [0, 0.5, 1, 1.5, 2, 2.5, 3, 4, 5, 6, 7, 8, 9, 10, 12.5, 15, 17.5];   % target SNR.
 Ps = 1;
@@ -50,13 +50,13 @@ parfor sigma_iter = 1:N_sigmas
         if record_csi
             if isempty(CSI{sigma_iter})
                 Ls = length(syms);
-                csi_temp = zeros(N_sim, Ls);
-                syms_temp_transmit = zeros(N_sim, Ls);
-                syms_temp_receive = zeros(N_sim, Ls);
+                CSI{sigma_iter} = zeros(N_sim, Ls);
+                SYMS_TRANSMIT{sigma_iter} = zeros(N_sim, Ls);
+                SYMS_RECEIVE{sigma_iter} = zeros(N_sim, Ls);
             end
-            csi_temp(sim_iter, :) = ch;
-            syms_temp_transmit(sim_iter, :) = syms;
-            syms_temp_receive(sim_iter, :) = syms_with_noise;
+            CSI{sigma_iter}(sim_iter, :) = ch;
+            SYMS_TRANSMIT{sigma_iter}(sim_iter, :) = syms;
+            SYMS_RECEIVE{sigma_iter}(sim_iter, :) = syms_with_noise;
         end
         pred_bits = bit_demapping(syms_with_noise, length(encoded_bits), mapping_conf, ch, ch_conf, sigma);
         
@@ -98,10 +98,6 @@ parfor sigma_iter = 1:N_sigmas
     disp(['Log BLER after encoding: ', ...
         num2str(log10(err_box_cnt_crc(sigma_iter)))]);
     
-    %% Update CSI && SYMS.
-    CSI{sigma_iter} = csi_temp;
-    SYMS_TRANSMIT{sigma_iter} = syms_temp_transmit;
-    SYMS_RECEIVE{sigma_iter} = syms_temp_receive;
 end
 time_elapsed = toc;
 assert(~any(diff(L_encoded)), 'error in length of encoded bits!');
