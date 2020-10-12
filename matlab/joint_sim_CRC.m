@@ -72,8 +72,8 @@ parfor sigma_iter = 1:N_sigmas
         %% Find all the errors.       
         err_bit_cnt_after_coding(sigma_iter) = err_bit_cnt_after_coding(sigma_iter) + ...
         sum(xor(random_bits_with_crc, decoded_bits_with_crc));
-        for k=1:16:length(decoded_validation)
-            if(any(decoded_validation(k:k+15)))
+        for k=1:length(decoded_validation(:,1))
+            if(any(decoded_validation(k, :)))
                 err_box_cnt_crc(sigma_iter)=err_box_cnt_crc(sigma_iter)+1;
             end
         end
@@ -85,7 +85,7 @@ parfor sigma_iter = 1:N_sigmas
         
     end
     err_box_cnt_crc(sigma_iter)=err_box_cnt_crc(sigma_iter)/...
-        (ceil(length(decoded_validation)/16)*N_sim);
+        (ceil(numel(decoded_validation)/16)*N_sim);
     
     disp([num2str(sigma_iter),'/', num2str(N_sigmas),' Complete for SNR=',...
         num2str(SNR_arr(sigma_iter)), 'dB']);
