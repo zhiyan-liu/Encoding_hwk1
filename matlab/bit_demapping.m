@@ -6,15 +6,17 @@ function bit_stream=bit_demapping(syms, L, mapping_conf, ch, ch_conf, sigma)
     mode = mapping_conf.mode;       % Demapping mode: Channel Estimation mode.
     alg = mapping_conf.alg;         % Channel Equalization algorithm.
     output_mode = mapping_conf.out; 
+    % Assume PSK.
+    Amp = abs(mapping_vector(1));
+    SNR = 20*log10(Amp/sigma);
     
     if strcmp(mode, 'ch_known')
         assert(logical(exist('ch', 'var')));
         if strcmp(alg, 'zf')
             est_syms=syms ./ ch;
         elseif strcmp(alg, 'mse')
-            SNR = mapping_conf.SNR;
             snr = 10^(SNR/10);
-            est_syms=conj(ch)./(ch.*conj(ch)+1/snr);
+            est_syms=syms .* conj(ch)./(ch.*conj(ch)+1/snr);
         end
     end
 
@@ -29,13 +31,12 @@ function bit_stream=bit_demapping(syms, L, mapping_conf, ch, ch_conf, sigma)
             end
         end
         % using linear interp to estimate channels.
-        est_ch = linear_interp(est_ch, pilot_flag);
-        % est_ch = quad_interp(est_ch, pilot_flag, pilot_rate);
+        % est_ch = linear_interp(est_ch, pilot_flag);
+        est_ch = quad_interp(est_ch, pilot_flag, pilot_rate);
         % est_ch = est_kalman(est_ch, pilot_flag, pilot_rate, ch_conf.rho, ch_conf.b, sigma);
         if strcmp(alg, 'zf')
             est_syms = syms ./ est_ch;
         elseif strcmp(alg, 'mse')
-            SNR = mapping_conf.SNR;
             snr = 10^(SNR/10);
             est_syms=conj(est_ch)./(est_ch.*conj(est_ch)+1/snr);
         end
